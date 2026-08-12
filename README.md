@@ -1,61 +1,242 @@
-# 🔋 App Bateria
+# 🔋 Battery Monitor
 
-Este projeto é um aplicativo mobile construído em Flutter para monitorar o nível de bateria do dispositivo. Desenvolvido como parte de um teste técnico, o aplicativo demonstra a integração entre o framework Flutter e os recursos nativos do sistema operacional, além de aplicar persistência de dados local.
+Aplicativo Flutter desenvolvido como teste técnico para demonstrar conhecimentos em **Flutter, comunicação nativa, gerenciamento de estado e persistência local de dados**.
 
-## 🛠️ Tecnologias e Padrões Utilizados
+O aplicativo permite consultar o nível atual da bateria do dispositivo através de código nativo Android, armazenar cada consulta localmente e visualizar o histórico das consultas realizadas.
 
-*   **Frontend:** Flutter & Dart
-*   **Integração Nativa:** Kotlin (Android) utilizando `MethodChannel` para acessar a API de bateria do sistema.
-*   **Gerenciamento de Estado:** `Provider`
-*   **Armazenamento Local:** `SharedPreferences` para manter o histórico de consultas salvo no dispositivo.
-*   **Arquitetura:** Clean Architecture (Arquitetura Limpa).
+## 📱 Funcionalidades
 
-## 🏗️ Estrutura do Projeto (Clean Architecture)
+* Consulta do nível atual da bateria do dispositivo.
+* Comunicação entre Flutter e Android utilizando `MethodChannel`.
+* Implementação nativa em Kotlin.
+* Persistência local do histórico de consultas.
+* Registro da porcentagem da bateria e horário da consulta.
+* Gerenciamento de estado utilizando `Provider`.
+* Atualização reativa da interface após uma nova consulta.
+* Histórico das consultas realizadas.
+* Tratamento de erros durante a comunicação com o código nativo.
+* Indicador de carregamento durante operações assíncronas.
 
-O projeto foi organizado em camadas para garantir a separação de responsabilidades, facilitando a escalabilidade e a manutenção do código:
+## 🛠️ Tecnologias utilizadas
+
+* **Flutter**
+* **Dart**
+* **Kotlin**
+* **Android SDK**
+* **Provider**
+* **SharedPreferences**
+* **MethodChannel**
+
+## 🏗️ Arquitetura
+
+O projeto foi estruturado utilizando **Clean Architecture**, separando as responsabilidades entre apresentação, domínio e dados.
 
 ```text
 lib/
-└── features/
-    └── battery/
-        ├── data/
-        │   ├── datasources/    # Fontes de dados (MethodChannel nativo e Cache local)
-        │   └── repositories/   # Implementação dos contratos de acesso a dados
-        ├── domain/
-        │   ├── entities/       # Entidades de negócio (ex: BatteryRecord)
-        │   └── repositories/   # Interfaces/Contratos
-        └── presentation/
-            ├── controllers/    # Controladores de estado (Provider)
-            └── pages/          # Interface de Usuário (Home e Histórico)
+├── core/
+│   └── errors/
+│
+├── features/
+│   └── battery/
+│       ├── data/
+│       │   ├── datasources/
+│       │   ├── models/
+│       │   └── repositories/
+│       │
+│       ├── domain/
+│       │   ├── entities/
+│       │   └── repositories/
+│       │
+│       └── presentation/
+│           ├── controllers/
+│           └── pages/
+│
+└── main.dart
+```
 
-🚀 Funcionalidades
-Consulta em Tempo Real: Solicita o nível atual de bateria diretamente do hardware/sistema operacional Android.
+Essa organização evita que a interface tenha acesso direto à persistência ou à implementação nativa, mantendo as responsabilidades separadas e facilitando a manutenção e evolução do projeto.
 
-Histórico Local: Cada consulta é salva com data e hora exatas, permanecendo disponível mesmo após o fechamento do aplicativo.
+## 🔌 Comunicação nativa
 
-Navegação Fluida: Interface dividida em abas (Bateria e Histórico) para melhor usabilidade.
+A comunicação entre Flutter e Android é realizada através de um `MethodChannel`.
 
-⚙️ Como Executar
-Pré-requisitos:
+### Flutter
 
-Flutter SDK
+O Flutter solicita o nível atual da bateria utilizando o canal configurado para comunicação com o código nativo.
 
-Android Studio com emulador configurado (ou dispositivo físico)
+### Android / Kotlin
 
-Java JDK 17 (padrão recomendado para as compilações mais recentes do Gradle)
+No código nativo é utilizado o `BatteryManager` do Android para obter o percentual atual da bateria.
 
-Passo a passo:
+### Fluxo
 
-Clone este repositório no seu ambiente local.
+```text
+Flutter
+   ↓
+Controller (Provider)
+   ↓
+Repository
+   ↓
+MethodChannel
+   ↓
+Kotlin
+   ↓
+BatteryManager
+   ↓
+Retorno para o Flutter
+```
 
-Abra o terminal na raiz do projeto e baixe as dependências:
+Essa abordagem foi escolhida porque o objetivo do teste é demonstrar conhecimento de comunicação entre Flutter e código nativo, sem utilizar pacotes prontos para consulta da bateria.
 
-Bash
+## 🔄 Gerenciamento de estado
+
+Foi utilizado o **Provider** para o gerenciamento do estado da aplicação.
+
+O controller é responsável por:
+
+* Carregar o histórico ao iniciar a aplicação.
+* Controlar o estado de carregamento.
+* Solicitar uma nova leitura da bateria.
+* Salvar uma nova consulta.
+* Atualizar a lista de histórico de forma reativa.
+* Notificar a interface quando o estado for alterado.
+
+Dessa forma, a tela de histórico é atualizada automaticamente quando uma nova consulta é realizada, sem necessidade de recarregar manualmente a tela.
+
+## 💾 Persistência local
+
+Para armazenamento local foi utilizado o **SharedPreferences**.
+
+O aplicativo armazena o histórico das consultas realizadas contendo:
+
+* Nível da bateria.
+* Data da consulta.
+* Horário da consulta.
+
+Os registros são armazenados considerando o **fuso horário local**, garantindo que as informações apresentadas ao usuário correspondam ao horário do dispositivo.
+
+Os dados permanecem disponíveis mesmo após o fechamento e reabertura do aplicativo.
+
+## 📲 Telas
+
+### Home
+
+Tela principal da aplicação contendo:
+
+* Botão para consultar a bateria.
+* Exibição do nível atual da bateria.
+* Indicador de carregamento durante a consulta.
+* Feedback de possíveis erros.
+
+### Histórico
+
+Tela dedicada à exibição de todas as consultas realizadas, apresentando o nível da bateria e a respectiva data e horário.
+
+Caso não existam registros, é apresentada uma mensagem informando que o histórico está vazio.
+
+## ⚠️ Tratamento de erros
+
+A aplicação possui tratamento de erros para evitar encerramentos inesperados durante as operações assíncronas.
+
+Entre os cenários considerados estão:
+
+* Falha na comunicação através do `MethodChannel`.
+* Erro durante a consulta da bateria no código nativo.
+* Falha durante a persistência dos dados.
+* Ausência de dados retornados pelo código nativo.
+
+## 🚀 Como executar o projeto
+
+### Pré-requisitos
+
+* Flutter SDK
+* Android Studio
+* Android SDK
+* Android Emulator configurado ou dispositivo Android físico
+  
+
+### Passo a passo
+
+#### 1. Clone o repositório
+
+```bash
+git clone https://github.com/SEU_USUARIO/app_bateria.git
+```
+
+#### 2. Entre na pasta do projeto
+
+```bash
+cd app_bateria
+```
+
+#### 3. Instale as dependências
+
+```bash
 flutter pub get
+```
 
-Inicie o aplicativo:
+#### 4. Verifique o ambiente
 
-Bash
+```bash
+flutter doctor
+```
+
+#### 5. Verifique os dispositivos disponíveis
+
+```bash
+flutter devices
+```
+
+#### 6. Execute o aplicativo
+
+```bash
 flutter run
+```
 
-Nota: Ao testar via emulador do Android Studio, você pode simular diferentes níveis de bateria acessando Extended Controls (...) > Battery > Charge level.
+## 🧪 Testando a aplicação
+
+Após iniciar o aplicativo:
+
+1. Acesse a tela **Home**.
+2. Toque no botão **Consultar Bateria**.
+3. Verifique o nível atual da bateria.
+4. Acesse a tela **Histórico**.
+5. Verifique se a consulta foi registrada.
+6. Feche e abra novamente o aplicativo.
+7. Verifique se o histórico continua disponível.
+
+### Teste utilizando o Android Emulator
+
+Ao executar através do emulador do Android Studio, é possível simular diferentes níveis de bateria através dos controles estendidos:
+
+```text
+Extended Controls (...)
+        ↓
+Battery
+        ↓
+Charge level
+```
+
+Isso permite testar diferentes cenários de consulta sem depender exclusivamente do nível real da bateria do computador ou dispositivo.
+
+## 🎯 Objetivo técnico
+
+O projeto foi desenvolvido com foco na demonstração dos seguintes conhecimentos:
+
+* Desenvolvimento de aplicações Flutter.
+* Comunicação Flutter ↔ Android.
+* Implementação de `MethodChannel`.
+* Desenvolvimento nativo utilizando Kotlin.
+* Gerenciamento de estado com Provider.
+* Persistência local com SharedPreferences.
+* Clean Architecture.
+* Programação assíncrona.
+* Reatividade da interface.
+* Tratamento de erros.
+* Separação de responsabilidades.
+
+## 👨‍💻 Autor
+
+**João Arthur**
+
+Desenvolvedor Flutter Pleno
